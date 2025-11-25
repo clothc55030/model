@@ -23,11 +23,14 @@ export const generateTryOnImage = async (
   scene: Scene
 ): Promise<string> => {
   
-  if (!process.env.API_KEY) {
-    throw new Error("API Key is missing. Please ensure process.env.API_KEY is set.");
+  // Safely check for API Key without crashing if process is undefined
+  const apiKey = (typeof process !== 'undefined' && process.env) ? process.env.API_KEY : null;
+
+  if (!apiKey) {
+    throw new Error("API Key is missing. Please ensure process.env.API_KEY is set or use the Google Login feature.");
   }
 
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: apiKey });
   
   // Construct a descriptive prompt for the model
   const prompt = `

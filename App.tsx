@@ -19,16 +19,19 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const checkApiKey = async () => {
-      if (window.aistudio) {
-        const hasSelected = await window.aistudio.hasSelectedApiKey();
-        setHasKey(hasSelected);
+      // Safely check for aistudio environment
+      if (typeof window !== 'undefined' && window.aistudio) {
+        try {
+          const hasSelected = await window.aistudio.hasSelectedApiKey();
+          setHasKey(hasSelected);
+        } catch (e) {
+          console.warn("AI Studio check failed", e);
+        }
       } else {
-        // Fallback for environments without aistudio (e.g. local dev if env var is set)
-        // Check if process.env.API_KEY is available in a real scenario, 
-        // but strictly following instructions we rely on aistudio flow for "Google Login".
-        // Assuming true if not in the specific environment to avoid blocking UI during dev if needed,
-        // but for this request we want to enforce the login flow if aistudio exists.
-        if (process.env.API_KEY) {
+        // Fallback for environments without aistudio
+        // Safely check process.env to avoid ReferenceError
+        const hasEnvKey = typeof process !== 'undefined' && process.env && process.env.API_KEY;
+        if (hasEnvKey) {
             setHasKey(true);
         }
       }
@@ -37,9 +40,15 @@ const App: React.FC = () => {
   }, []);
 
   const handleLogin = async () => {
-    if (window.aistudio) {
-      await window.aistudio.openSelectKey();
-      setHasKey(true);
+    if (typeof window !== 'undefined' && window.aistudio) {
+      try {
+        await window.aistudio.openSelectKey();
+        setHasKey(true);
+      } catch (e) {
+        console.error("Login failed", e);
+      }
+    } else {
+      alert("此功能依賴 Google AI Studio 環境。若您已將此專案部署至 GitHub Pages，請確保在建置設定中已配置 API Key (process.env.API_KEY)。");
     }
   };
 
@@ -65,7 +74,7 @@ const App: React.FC = () => {
     } catch (err: any) {
       // Handle missing entity error by prompting for key again
       if (err.message && err.message.includes("Requested entity was not found")) {
-        if (window.aistudio) {
+        if (typeof window !== 'undefined' && window.aistudio) {
           try {
             await window.aistudio.openSelectKey();
             // Clear error so user can try again easily

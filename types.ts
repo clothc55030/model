@@ -33,10 +33,3 @@ export interface GenerationConfig {
 export interface GeneratedImageResult {
   imageUrl: string;
 }
-
-declare global {
-  interface AIStudio {
-    hasSelectedApiKey(): Promise<boolean>;
-    openSelectKey(): Promise<void>;
-  }
-}
